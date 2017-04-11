@@ -38,6 +38,8 @@ void lcdTime() {
 	lcd.print(now.minute());
 }
 void dispView() {
+
+	lcd.clear();
 	
 	lcdTime();
 
