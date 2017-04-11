@@ -33,9 +33,21 @@ void lcdTime() {
 
 	lcd.setCursor(0, 0);
 	
-	lcd.print(now.hour());
+	if(now.hour()<10) {
+		lcd.print('0');
+		lcd.print(now.hour());
+	} else {
+		lcd.print(now.hour());
+	}
+
 	lcd.print(":");
-	lcd.print(now.minute());
+
+	if(now.minute()<10) {
+		lcd.print('0');
+		lcd.print(now.minute());
+	} else {
+		lcd.print(now.minute());
+	}
 }
 void dispView() {
 
