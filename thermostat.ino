@@ -1,3 +1,18 @@
+/* 
+thermostat firmware
+(c) 2017 Robert Fonó
+
+available serial commands:
+
+t:%d%d - set mock temperature
+example: t:18
+
+c:%d%d%d%d - set clock in format HHMM
+example: c:1608
+
+*/
+
+
 #include "LiquidCrystal.h"
 #include <inttypes.h>
 #include <Wire.h>
@@ -116,6 +131,13 @@ void serialProcess(char* indata) {
 		serialTime();
 		delay(100);
 	}
+	else if (indata[0] == 'c' && indata[1] == ':') {
+		char newclock[8] = {	indata[2], indata[3], ':', 
+					indata[4], indata[5], ':', '0', '0'};
+		
+		RTC.adjust(DateTime(__DATE__, newclock));
+		lcdTime();
+	}
 
 }
 
@@ -126,7 +148,7 @@ char *pickMode(int hour, int minute) {
 	if (	(hour > daylimit_hour || 
 		(hour == daylimit_hour && minute >= daylimit_minute)) &&
 		(hour < nightlimit_hour || 
-		(hour == nightlimit_hour && minute <= nightlimit_minute)) 
+		(hour == nightlimit_hour && minute < nightlimit_minute)) 
 	) {
 		return "day";
 	} else {
@@ -142,6 +164,7 @@ void setTarget() {
 		target = nighttarget;
 	}
 }
+
 
 void setup() {
 	lcd.begin(16, 2);
@@ -171,12 +194,12 @@ void loop() {
 		loopIter = 0;
 	}
 
-	char indata[6] = {'\0'};
+	char indata[7] = {'\0'};
 	char inchar = -1;
 	int index = 0;
 
 	while (Serial.available() > 0) {
-		if (index < 5) {
+		if (index < 6) {
 			inchar = Serial.read();
 			indata[index] = inchar;
 			index++;
