@@ -1,9 +1,14 @@
-#include <LiquidCrystal.h>
+#include "LiquidCrystal.h"
 #include <inttypes.h>
+#include <Wire.h>
+#include "RTClib.h"
 
 int CTRL = 8;
 
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+RTC_DS1307 RTC;
+
 
 int temp = 19;
 int daytarget = 22;
@@ -45,9 +50,37 @@ void dispView() {
 	lcd.print(mostr);
 }
 
+void serialTime() {
+	DateTime now = RTC.now(); 
+	Serial.print(now.month(), DEC);
+	Serial.print('/');
+	Serial.print(now.day(), DEC);
+	Serial.print('/');
+	Serial.print(now.year(), DEC);
+	Serial.print(' ');
+	Serial.print(now.hour(), DEC);
+	Serial.print(':');
+	Serial.print(now.minute(), DEC);
+	Serial.print(':');
+	Serial.print(now.second(), DEC);
+	Serial.println();    
+}
+
+
 void setup() {
 	lcd.begin(16, 2);
 	Serial.begin(9600);
+	Wire.begin();
+	RTC.begin();
+
+	 if (! RTC.isrunning()) {
+		 Serial.println("RTC is NOT running!");
+		// This will reflect the time that your sketch was compiled
+		RTC.adjust(DateTime(__DATE__, __TIME__));
+	}
+
+
+
 	
 	pinMode(CTRL, OUTPUT);
 	digitalWrite(CTRL, LOW);
@@ -88,6 +121,10 @@ void loop() {
 		temp = atoi(convtemp);
 		dispView();
 	}
+	else if (strcmp(indata,"time") == 0){
+		serialTime();
+		delay(100);
+	}
 
 	if (temp < target) {
 		digitalWrite(CTRL, HIGH);
@@ -102,6 +139,5 @@ void loop() {
 			dispView();
 		}
 	}
-
 
 }
