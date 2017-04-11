@@ -16,19 +16,30 @@ int nighttarget = 18;
 
 int target = daytarget;
 
+int daylimit_hour = 7;
+int daylimit_minute = 0;
+int nightlimit_hour = 21;
+int nightlimit_minute = 0;
+ 
 char *state = "stdb";
 char *mode = "day";
 
-void dispView() {
+//utility variables
 
+int loopIter = 0;
+
+void lcdTime() {
 	DateTime now = RTC.now();
 
-	lcd.clear();
 	lcd.setCursor(0, 0);
 	
 	lcd.print(now.hour());
 	lcd.print(":");
 	lcd.print(now.minute());
+}
+void dispView() {
+	
+	lcdTime();
 
 	lcd.setCursor(7,0);
 
@@ -71,44 +82,7 @@ void serialTime() {
 	Serial.println();    
 }
 
-
-void setup() {
-	lcd.begin(16, 2);
-	Serial.begin(9600);
-	Wire.begin();
-	RTC.begin();
-
-	if (! RTC.isrunning()) {
-		 Serial.println("RTC is NOT running!");
-		// This will reflect the time that your sketch was compiled
-		RTC.adjust(DateTime(__DATE__, __TIME__));
-	}
-
-	
-	pinMode(CTRL, OUTPUT);
-	digitalWrite(CTRL, LOW);
-	dispView();
-}
-
-void loop() {
-
-	char indata[6] = {'\0'};
-	char inchar = -1;
-	int index = 0;
-
-	while (Serial.available() > 0) {
-		if (index < 5) {
-			inchar = Serial.read();
-			indata[index] = inchar;
-			index++;
-			indata[index] = '\0';
-		} 
-		else {
-			Serial.read();		
-		}
-	}
-	delay(50);
-
+void serialProcess(char* indata) {
 	if (strcmp(indata,"night") == 0){
 		mode = "night";
 		target = nighttarget;
@@ -143,4 +117,53 @@ void loop() {
 		}
 	}
 
+
+}
+
+void setup() {
+	lcd.begin(16, 2);
+	Serial.begin(9600);
+	Wire.begin();
+	RTC.begin();
+
+	if (! RTC.isrunning()) {
+		 Serial.println("RTC is NOT running!");
+		// This will reflect the time that your sketch was compiled
+		RTC.adjust(DateTime(__DATE__, __TIME__));
+	}
+
+	
+	pinMode(CTRL, OUTPUT);
+	digitalWrite(CTRL, LOW);
+	dispView();
+}
+
+void loop() {
+
+	//refresh the clock if it hasn't been refreshed in a while
+	//fires roughly every 5 seconds
+	loopIter++;
+	if(loopIter >= 100) {
+		lcdTime();
+		loopIter = 0;
+	}
+
+	char indata[6] = {'\0'};
+	char inchar = -1;
+	int index = 0;
+
+	while (Serial.available() > 0) {
+		if (index < 5) {
+			inchar = Serial.read();
+			indata[index] = inchar;
+			index++;
+			indata[index] = '\0';
+		} 
+		else {
+			Serial.read();		
+		}
+	}
+	delay(50);
+	
+	serialProcess(indata);
 }
