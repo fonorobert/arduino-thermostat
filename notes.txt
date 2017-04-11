@@ -1,0 +1,1 @@
+Guide for clock module:  http://henrysbench.capnfatz.com/henrys-bench/arduino-sensors-and-input/arduino-tiny-rtc-d1307-tutorial/
