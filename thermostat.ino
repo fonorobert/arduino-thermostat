@@ -20,10 +20,15 @@ char *state = "stdb";
 char *mode = "day";
 
 void dispView() {
+
+	DateTime now = RTC.now();
+
 	lcd.clear();
 	lcd.setCursor(0, 0);
 	
-	lcd.print("18:30");
+	lcd.print(now.hour());
+	lcd.print(":");
+	lcd.print(now.minute());
 
 	lcd.setCursor(7,0);
 
@@ -73,13 +78,11 @@ void setup() {
 	Wire.begin();
 	RTC.begin();
 
-	 if (! RTC.isrunning()) {
+	if (! RTC.isrunning()) {
 		 Serial.println("RTC is NOT running!");
 		// This will reflect the time that your sketch was compiled
 		RTC.adjust(DateTime(__DATE__, __TIME__));
 	}
-
-
 
 	
 	pinMode(CTRL, OUTPUT);
