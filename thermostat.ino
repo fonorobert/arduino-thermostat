@@ -117,21 +117,30 @@ void serialProcess(char* indata) {
 		delay(100);
 	}
 
-	if (temp < target) {
-		digitalWrite(CTRL, HIGH);
-		if (strcmp(state,"heat") != 0) {
-			state = "heat";
-			dispView();
-		}
+}
+
+//decide if it's day or night
+//returns name of mode ("day" or "night") 
+char *pickMode(int hour, int minute) {
+
+	if (	(hour > daylimit_hour || 
+		(hour == daylimit_hour && minute >= daylimit_minute)) &&
+		(hour < nightlimit_hour || 
+		(hour == nightlimit_hour && minute <= nightlimit_minute)) 
+	) {
+		return "day";
 	} else {
-		digitalWrite(CTRL, LOW);
-		if (strcmp(state,"stdb") != 0) {
-			state = "stdb";
-			dispView();
-		}
+		return "night";
 	}
 
+}
 
+void setTarget() {
+	if (strcmp(mode,"day") == 0) {
+		target = daytarget;
+	} else if (strcmp(mode, "night") == 0) {
+		target = nighttarget;
+	}
 }
 
 void setup() {
@@ -180,4 +189,33 @@ void loop() {
 	delay(50);
 	
 	serialProcess(indata);
+	
+
+	//run pickMode, redraw screen if mode changed
+
+	DateTime now = RTC.now();
+
+	char *newMode = pickMode(now.hour(), now.minute());
+	
+	if (!strcmp(newMode, mode) == 0) {
+		mode = newMode;
+		setTarget();
+		dispView();	
+	}
+
+	if (temp < target) {
+		digitalWrite(CTRL, HIGH);
+		if (strcmp(state,"heat") != 0) {
+			state = "heat";
+			dispView();
+		}
+	} else {
+		digitalWrite(CTRL, LOW);
+		if (strcmp(state,"stdb") != 0) {
+			state = "stdb";
+			dispView();
+		}
+	}
+
+
 }
